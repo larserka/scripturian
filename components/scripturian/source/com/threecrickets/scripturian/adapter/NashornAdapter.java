@@ -18,6 +18,7 @@ import java.util.Arrays;
 
 import jdk.nashorn.api.scripting.NashornException;
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import jdk.nashorn.internal.objects.NativeArray;
 import jdk.nashorn.internal.objects.NativeJava;
 import jdk.nashorn.internal.runtime.Context;
@@ -223,7 +224,7 @@ public class NashornAdapter extends LanguageAdapterBase
 		{
 			ScriptObject globalScope = getGlobalScope( executionContext );
 
-			Object entryPoint = globalScope.get( entryPointName );
+			Object entryPoint = getEntryPoint( entryPointName, globalScope );
 			if( !( entryPoint instanceof ScriptFunction ) )
 				throw new NoSuchMethodException( entryPointName );
 
@@ -255,6 +256,51 @@ public class NashornAdapter extends LanguageAdapterBase
 				Context.setGlobal( oldGlobal );
 		}
 	}
+
+	private Object getEntryPoint( String entryPointName, ScriptObject globalScope )
+	{
+		Object entryPoint;
+		String[] namespace = entryPointName.split("\\.");
+		if( namespace.length == 0 )
+			// Entry point i a function name.
+			entryPoint = globalScope.get( entryPointName );
+		else
+			// Actual entry point function is within a namespace.
+			entryPoint = traverseNamespace( namespace, globalScope );
+
+		return entryPoint;
+	}
+
+	private Object traverseNamespace( String[] namespace, ScriptObject globalScope )
+	{
+		Object retVal = null;
+
+		// Get the root value from the global scope.
+		Object value = globalScope.get( namespace[0] );
+		ScriptObjectMirror mirror = null;
+
+		if( value != null )
+			// Wrap the root so we can access the members.
+			mirror = (ScriptObjectMirror) ScriptObjectMirror.wrap( value, globalScope );
+
+		for( int i = 1; mirror != null && i < namespace.length; i++ )
+		{
+			// Get next value in the namespace.
+			Object tmp = mirror.get( namespace[i] );
+			if( tmp != null )
+				// Wrap the value so we can access the members.
+				mirror = (ScriptObjectMirror) ScriptObjectMirror.wrap( tmp, globalScope );
+			else
+				return retVal;
+			
+		}
+
+		if( mirror != null )
+			retVal = ScriptObjectMirror.unwrap( mirror, globalScope );
+
+		return retVal;
+	}
+	
 
 	// //////////////////////////////////////////////////////////////////////////
 	// Protected
