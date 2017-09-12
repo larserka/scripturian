@@ -600,7 +600,17 @@ public class DocumentFileSource<D> implements DocumentSource<D>
 		else if( !file.exists() )
 		{
 			// Return a file with our name
-
+			
+			String ext = ScripturianUtil.getExtension(file);
+			if(preExtension!=null&&ext!=null) {
+				// Check for a file with preExtension
+				String checkFileName = file.getAbsolutePath().substring(0, file.getAbsolutePath().length() - ext.length()-1);
+				File f = new File(checkFileName + preExtension + "." + ext);
+				if(f.exists()) {
+					return f;
+				}
+			}
+			
 			File directory = ScripturianUtil.getNormalizedFile( file.getParentFile() );
 			File[] filesWithName = directory.listFiles( new DocumentFilter( file.getName(), preExtension ) );
 			if( ( filesWithName != null ) && ( filesWithName.length > 0 ) )
@@ -618,6 +628,21 @@ public class DocumentFileSource<D> implements DocumentSource<D>
 
 			// No file
 			throw new DocumentNotFoundException( "File does not exist: " + file.getPath() );
+		}
+		if( preExtension!=null )
+		{
+			// Return a file with the preExtension or none at all.
+			String ext = ScripturianUtil.getExtension(file);
+			String preExtensionExt = preExtension + "." + ext;
+			if( !file.getName().endsWith(preExtensionExt) )
+			{
+				String absPath = file.getAbsolutePath();
+				String fileName = absPath.substring(0, absPath.length()-ext.length()-1) + preExtensionExt;
+				file = new File(fileName);
+				if( !file.exists() )
+					throw new DocumentNotFoundException( "File does not exist: " + file.getPath() );
+			}
+			
 		}
 
 		return file;
