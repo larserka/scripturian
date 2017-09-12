@@ -5,10 +5,10 @@
 	<version>1.2-L</version>
 	
 	<scm>
-		<connection>scm:git:ssh://git@github.com/larserka/${project.artifactId}.git</connection>
-		<developerConnection>scm:git:ssh://git@github.com/larserka/${project.artifactId}.git</developerConnection>
+		<connection>scm:git:ssh://github.com/larserka/${project.artifactId}.git</connection>
+		<developerConnection>scm:git:ssh://github.com/larserka/${project.artifactId}.git</developerConnection>
 		<url>https://github.com/larserka/${project.artifactId}.git</url>
-		<tag>scripturian-1.2-L</tag>
+		<tag>HEAD</tag>
 	</scm>
 
 
